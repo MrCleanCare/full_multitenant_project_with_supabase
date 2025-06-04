@@ -78,29 +78,33 @@ A powerful multi-tenant SaaS platform built with Next.js 14, Supabase, and TypeS
 
 6. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Database Setup
+## Deployment
 
-1. Create a new Supabase project.
+### Deploying to Render
 
-2. Run the migration:
-   ```bash
-   npx supabase db push
-   ```
+1. Fork this repository to your GitHub account.
 
-## Project Structure
+2. Create a new Web Service on Render:
+   - Go to https://dashboard.render.com
+   - Click "New +" and select "Web Service"
+   - Connect your GitHub repository
+   - Choose the branch to deploy
+   - Fill in the following settings:
+     - Name: your-app-name
+     - Environment: Node
+     - Build Command: `npm install && npm run build`
+     - Start Command: `npm start`
+     - Select the appropriate instance type
 
-```
-├── src/
-│   ├── app/              # Next.js app directory
-│   ├── components/       # Reusable components
-│   ├── hooks/           # Custom React hooks
-│   ├── lib/             # Utility functions and configurations
-│   ├── types/           # TypeScript type definitions
-│   └── utils/           # Helper functions
-├── public/              # Static files
-├── supabase/           # Supabase configurations and migrations
-└── test/               # Test files
-```
+3. Add environment variables:
+   - NEXT_PUBLIC_SUPABASE_URL
+   - NEXT_PUBLIC_SUPABASE_ANON_KEY
+   - NEXT_PUBLIC_SITE_URL
+   - NODE_ENV=production
+
+4. Click "Create Web Service"
+
+Your application will be automatically deployed when you push changes to the main branch.
 
 ## Development
 
