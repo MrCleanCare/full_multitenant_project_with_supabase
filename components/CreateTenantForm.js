@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { useSupabaseClient } from '@supabase/auth-helpers-react'
+import { createClient } from '@/utils/supabase/client'
 
 export default function CreateTenantForm({ onSuccess }) {
-  const supabase = useSupabaseClient()
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const supabase = createClient()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -16,10 +16,20 @@ export default function CreateTenantForm({ onSuccess }) {
       // Generate a slug from the name
       const slug = name.toLowerCase().replace(/\s+/g, '-')
 
+      // Get the current user
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('Not authenticated')
+
       // Insert the tenant
       const { data: tenant, error: tenantError } = await supabase
         .from('tenants')
-        .insert([{ name, slug }])
+        .insert([{ 
+          name, 
+          slug,
+          owner_id: session.user.id,
+          settings: { theme: 'light' },
+          subscription_tier: 'basic'
+        }])
         .select()
         .single()
 
@@ -30,7 +40,7 @@ export default function CreateTenantForm({ onSuccess }) {
         .from('tenant_users')
         .insert([{
           tenant_id: tenant.id,
-          user_id: (await supabase.auth.getUser()).data.user.id,
+          user_id: session.user.id,
           role: 'admin'
         }])
 
@@ -46,63 +56,38 @@ export default function CreateTenantForm({ onSuccess }) {
   }
 
   return (
-    <div style={{ 
-      backgroundColor: 'white',
-      padding: '20px',
-      borderRadius: '8px',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-    }}>
-      <h2>Create New Tenant</h2>
+    <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="error" style={{ marginBottom: '20px' }}>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
           {error}
         </div>
       )}
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label
-            htmlFor="tenantName"
-            style={{
-              display: 'block',
-              marginBottom: '5px',
-              fontWeight: '500'
-            }}
-          >
-            Tenant Name
-          </label>
-          <input
-            id="tenantName"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter tenant name"
-            required
-            style={{
-              width: '100%',
-              padding: '8px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              fontSize: '16px'
-            }}
-          />
-        </div>
-        <button
-          type="submit"
+      
+      <div>
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          Tenant Name
+        </label>
+        <input
+          type="text"
+          id="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Enter tenant name"
+          required
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           disabled={loading}
-          style={{
-            width: '100%',
-            padding: '10px',
-            backgroundColor: loading ? '#ccc' : '#0070f3',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '16px',
-            cursor: loading ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {loading ? 'Creating...' : 'Create Tenant'}
-        </button>
-      </form>
-    </div>
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={loading}
+        className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+          loading ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
+      >
+        {loading ? 'Creating...' : 'Create Tenant'}
+      </button>
+    </form>
   )
 } 
