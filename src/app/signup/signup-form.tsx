@@ -3,32 +3,31 @@
 import { useState } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 
-export default function LoginForm() {
+export default function SignUpForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const { signIn, loading, error } = useAuth()
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const { signUp, loading } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const result = await signUp({ email, password })
     
-    try {
-      setIsSubmitting(true)
-      await signIn({ email, password })
-    } catch (error) {
-      console.error('Login error:', error)
-    } finally {
-      setIsSubmitting(false)
+    if (result) {
+      setMessage({
+        type: result.success ? 'success' : 'error',
+        text: result.message
+      })
     }
   }
 
-  const isLoading = loading || isSubmitting
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded">
-          {error === 'Failed to fetch' ? 'Unable to connect to the server. Please check your internet connection.' : error}
+      {message && (
+        <div className={`${
+          message.type === 'success' ? 'bg-green-50 border-green-200 text-green-600' : 'bg-red-50 border-red-200 text-red-600'
+        } px-4 py-2 rounded border`}>
+          {message.text}
         </div>
       )}
       
@@ -41,9 +40,8 @@ export default function LoginForm() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          disabled={isLoading}
           required
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
       </div>
 
@@ -56,18 +54,17 @@ export default function LoginForm() {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          disabled={isLoading}
           required
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
       </div>
 
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={loading}
         className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isLoading ? 'Signing in...' : 'Sign in'}
+        {loading ? 'Signing up...' : 'Sign up'}
       </button>
     </form>
   )

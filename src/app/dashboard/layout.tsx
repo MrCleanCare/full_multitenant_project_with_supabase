@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import { DashboardNav } from './nav'
-import { TenantSwitcher } from './tenant-switcher'
+import TenantSwitcher from './tenant-switcher'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()

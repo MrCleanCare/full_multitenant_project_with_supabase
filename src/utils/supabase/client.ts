@@ -15,10 +15,22 @@ export const createClient = () => {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: true
+        detectSessionInUrl: true,
+        storageKey: 'supabase.auth.token',
       },
-      db: {
-        schema: 'public'
+      cookies: {
+        get(name: string) {
+          const cookie = document.cookie
+            .split('; ')
+            .find((row) => row.startsWith(`${name}=`))
+          return cookie ? cookie.split('=')[1] : undefined
+        },
+        set(name: string, value: string, options: { lifetime?: number; domain?: string; path?: string; sameSite?: string }) {
+          document.cookie = `${name}=${value}; Max-Age=${options.lifetime || 60 * 60 * 24 * 7}; Domain=${options.domain || ''}; Path=${options.path || '/'}; SameSite=${options.sameSite || 'lax'}`
+        },
+        remove(name: string, options: { domain?: string; path?: string }) {
+          document.cookie = `${name}=; Max-Age=0; Domain=${options.domain || ''}; Path=${options.path || '/'}`
+        }
       }
     }
   )

@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useTenant } from '@/hooks/use-tenant'
-import { supabase } from '@/lib/supabase'
+import { useEffect, useState, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { formatDate } from '@/lib/utils'
 
 interface DashboardStats {
+  totalTenants: number
   totalUsers: number
   totalTemplates: number
   totalQrCodes: number
@@ -18,69 +18,50 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { currentTenant } = useTenant()
   const [stats, setStats] = useState<DashboardStats>({
+    totalTenants: 0,
     totalUsers: 0,
     totalTemplates: 0,
     totalQrCodes: 0,
     recentActivity: [],
   })
   const [loading, setLoading] = useState(true)
+  const supabase = createClient()
 
-  useEffect(() => {
-    if (currentTenant) {
-      fetchDashboardStats()
-    }
-  }, [currentTenant])
-
-  const fetchDashboardStats = async () => {
+  const fetchDashboardStats = useCallback(async () => {
     try {
-      const [usersCount, templatesCount, qrCodesCount, activity] = await Promise.all([
-        supabase
-          .from('tenant_users')
-          .select('*', { count: 'exact' })
-          .eq('tenant_id', currentTenant?.id),
-        supabase
-          .from('templates')
-          .select('*', { count: 'exact' })
-          .eq('tenant_id', currentTenant?.id),
-        supabase
-          .from('qr_codes')
-          .select('*', { count: 'exact' })
-          .eq('tenant_id', currentTenant?.id),
-        supabase
-          .from('activity_logs')
-          .select('*')
-          .eq('tenant_id', currentTenant?.id)
-          .order('created_at', { ascending: false })
-          .limit(5),
-      ])
+      // Get total tenants
+      const { count: tenantsCount } = await supabase
+        .from('tenants')
+        .select('*', { count: 'exact', head: true })
+
+      // Get total users
+      const { count: usersCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+
+      // Get total templates
+      const { count: templatesCount } = await supabase
+        .from('templates')
+        .select('*', { count: 'exact', head: true })
 
       setStats({
-        totalUsers: usersCount.count || 0,
-        totalTemplates: templatesCount.count || 0,
-        totalQrCodes: qrCodesCount.count || 0,
-        recentActivity: activity.data || [],
+        totalTenants: tenantsCount || 0,
+        totalUsers: usersCount || 0,
+        totalTemplates: templatesCount || 0,
+        totalQrCodes: 0,
+        recentActivity: [],
       })
     } catch (error) {
       console.error('Error fetching dashboard stats:', error)
     } finally {
       setLoading(false)
     }
-  }
+  }, [supabase])
 
-  if (!currentTenant) {
-    return (
-      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold">Welcome to your dashboard</h2>
-          <p className="mt-2 text-muted-foreground">
-            Create or select a workspace to get started
-          </p>
-        </div>
-      </div>
-    )
-  }
+  useEffect(() => {
+    fetchDashboardStats()
+  }, [fetchDashboardStats])
 
   if (loading) {
     return (
@@ -95,10 +76,18 @@ export default function DashboardPage() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <p className="text-muted-foreground">
-          Overview of your workspace {currentTenant.name}
+          Overview of your workspace
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-lg border bg-card p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Total Tenants</p>
+              <h3 className="text-2xl font-bold">{stats.totalTenants}</h3>
+            </div>
+          </div>
+        </div>
         <div className="rounded-lg border bg-card p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -110,16 +99,8 @@ export default function DashboardPage() {
         <div className="rounded-lg border bg-card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Templates</p>
+              <p className="text-sm font-medium">Total Templates</p>
               <h3 className="text-2xl font-bold">{stats.totalTemplates}</h3>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">QR Codes</p>
-              <h3 className="text-2xl font-bold">{stats.totalQrCodes}</h3>
             </div>
           </div>
         </div>

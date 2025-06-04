@@ -32,9 +32,14 @@ export async function middleware(req: NextRequest) {
 
   const { data: { session } } = await supabase.auth.getSession()
 
-  // If accessing login page with a session, redirect to dashboard
-  if (session && req.nextUrl.pathname === '/') {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+  // Public routes that don't require authentication
+  const publicRoutes = ['/', '/login', '/signup', '/auth/callback']
+  if (publicRoutes.includes(req.nextUrl.pathname)) {
+    // If accessing login/signup with a session, redirect to dashboard
+    if (session && (req.nextUrl.pathname === '/login' || req.nextUrl.pathname === '/signup')) {
+      return NextResponse.redirect(new URL('/dashboard', req.url))
+    }
+    return res
   }
 
   // Protected routes
@@ -45,7 +50,7 @@ export async function middleware(req: NextRequest) {
 
   // If accessing a protected route without a session, redirect to login
   if (isProtectedRoute && !session) {
-    const redirectUrl = new URL('/', req.url)
+    const redirectUrl = new URL('/login', req.url)
     redirectUrl.searchParams.set('redirectTo', req.nextUrl.pathname)
     return NextResponse.redirect(redirectUrl)
   }
@@ -64,9 +69,13 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/',
-    '/dashboard/:path*',
-    '/client/:path*',
-    '/admin/:path*',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public (public files)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
   ],
 } 
