@@ -1,0 +1,1 @@
+// Block rendering: text, image, whatsapp, button

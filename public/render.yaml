@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: full-multitenant
+    env: static
+    buildCommand: ''
+    staticPublishPath: .
