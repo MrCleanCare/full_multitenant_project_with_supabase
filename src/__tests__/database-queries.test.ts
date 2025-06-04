@@ -103,13 +103,13 @@ describe('Database Query Tests', () => {
     it('should fetch tenant with user associations', async () => {
       const { data, error } = await supabase
         .from('tenants')
-        .select(\`
+        .select(`
           *,
           user_tenants (
             user_id,
             role
           )
-        \`)
+        `)
         .eq('id', testTenant.id)
         .single()
 

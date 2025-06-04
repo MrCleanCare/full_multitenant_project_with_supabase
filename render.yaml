@@ -1,24 +1,22 @@
 services:
   - type: web
-    runtime: node
     name: multitenant-saas
-    region: frankfurt
-    plan: starter
-    buildCommand: npm install && npm run build
+    env: node
+    buildCommand: ./render-build.sh
     startCommand: npm start
-    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: NEXT_PUBLIC_SUPABASE_URL
+      - key: SUPABASE_URL
         sync: false
-      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+      - key: SUPABASE_ANON_KEY
         sync: false
-      - key: NEXT_PUBLIC_SITE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_KEY
+      - key: RENDER_EXTERNAL_URL
         sync: false
     autoDeploy: true
+    healthCheckPath: /api/health
+    region: frankfurt
+    plan: starter
     branch: main
     rootDir: .
     numInstances: 1

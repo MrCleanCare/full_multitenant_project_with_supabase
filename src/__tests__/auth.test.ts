@@ -173,7 +173,7 @@ describe('Authentication Tests', () => {
 
     it('should handle invalid OAuth provider', async () => {
       const { error } = await supabase.auth.signInWithOAuth({
-        // @ts-ignore - Testing invalid provider
+        // @ts-expect-error - Intentionally testing with invalid provider to verify error handling
         provider: 'invalid-provider',
       })
       expect(error).toBeTruthy()

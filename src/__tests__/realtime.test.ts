@@ -100,15 +100,13 @@ describe('Real-time Subscription Tests', () => {
 
     it('should receive UPDATE notifications', async () => {
       const channel = supabase.channel('db-changes')
-      let tenantId: string
-
       const { data: tenant } = await supabase
         .from('tenants')
         .insert({ name: 'Test Tenant', slug: `test-${Date.now()}` })
         .select()
         .single()
 
-      tenantId = tenant!.id
+      const tenantId = tenant!.id
 
       const notificationPromise = new Promise<void>((resolve) => {
         channel
@@ -142,15 +140,13 @@ describe('Real-time Subscription Tests', () => {
 
     it('should receive DELETE notifications', async () => {
       const channel = supabase.channel('db-changes')
-      let tenantId: string
-
       const { data: tenant } = await supabase
         .from('tenants')
         .insert({ name: 'Test Tenant', slug: `test-${Date.now()}` })
         .select()
         .single()
 
-      tenantId = tenant!.id
+      const tenantId = tenant!.id
 
       const notificationPromise = new Promise<void>((resolve) => {
         channel

@@ -74,9 +74,9 @@ const mockData = {
 }
 
 const createQueryBuilder = <T extends keyof Database['public']['Tables']>(table: T) => {
-  let queryState = {
+  const queryState = {
     table,
-    filters: {} as Record<string, any>,
+    filters: {} as Record<string, unknown>,
     order: [] as { column: string; ascending: boolean }[],
     range: { start: 0, end: 1000 },
     returning: false,
@@ -170,7 +170,7 @@ const createQueryBuilder = <T extends keyof Database['public']['Tables']>(table:
     update: jest.fn((data: Partial<Database['public']['Tables'][T]['Update']>) => {
       if (table === 'tenants') {
         const index = mockData.tenants.findIndex(t => 
-          Object.entries(queryState.filters).every(([key, value]) => t[key] === value)
+          Object.entries(queryState.filters).every(([key, value]: [string, unknown]) => t[key as keyof typeof t] === value)
         )
         
         if (index === -1) {
@@ -194,7 +194,7 @@ const createQueryBuilder = <T extends keyof Database['public']['Tables']>(table:
 
       if (table === 'user_tenants') {
         const index = mockData.user_tenants.findIndex(ut => 
-          Object.entries(queryState.filters).every(([key, value]) => ut[key] === value)
+          Object.entries(queryState.filters).every(([key, value]: [string, unknown]) => ut[key as keyof typeof ut] === value)
         )
         
         if (index === -1) {
@@ -223,7 +223,7 @@ const createQueryBuilder = <T extends keyof Database['public']['Tables']>(table:
     delete: jest.fn(() => {
       if (table === 'tenants') {
         const index = mockData.tenants.findIndex(t => 
-          Object.entries(queryState.filters).every(([key, value]) => t[key] === value)
+          Object.entries(queryState.filters).every(([key, value]: [string, unknown]) => t[key as keyof typeof t] === value)
         )
         
         if (index === -1) {
@@ -246,7 +246,7 @@ const createQueryBuilder = <T extends keyof Database['public']['Tables']>(table:
 
       if (table === 'user_tenants') {
         const index = mockData.user_tenants.findIndex(ut => 
-          Object.entries(queryState.filters).every(([key, value]) => ut[key] === value)
+          Object.entries(queryState.filters).every(([key, value]: [string, unknown]) => ut[key as keyof typeof ut] === value)
         )
         
         if (index === -1) {
@@ -308,7 +308,7 @@ const createQueryBuilder = <T extends keyof Database['public']['Tables']>(table:
     single: jest.fn(() => {
       if (table === 'tenants') {
         const tenant = mockData.tenants.find(t => 
-          Object.entries(queryState.filters).every(([key, value]) => t[key] === value)
+          Object.entries(queryState.filters).every(([key, value]: [string, unknown]) => t[key as keyof typeof t] === value)
         )
 
         return Promise.resolve({
@@ -319,7 +319,7 @@ const createQueryBuilder = <T extends keyof Database['public']['Tables']>(table:
 
       if (table === 'user_tenants') {
         const userTenant = mockData.user_tenants.find(ut => 
-          Object.entries(queryState.filters).every(([key, value]) => ut[key] === value)
+          Object.entries(queryState.filters).every(([key, value]: [string, unknown]) => ut[key as keyof typeof ut] === value)
         )
 
         return Promise.resolve({
@@ -339,23 +339,23 @@ const createQueryBuilder = <T extends keyof Database['public']['Tables']>(table:
 
         // Apply filters
         results = results.filter(record => 
-          Object.entries(queryState.filters).every(([key, value]) => {
+          Object.entries(queryState.filters).every(([key, value]: [string, unknown]) => {
             if (key.endsWith('!')) {
-              return record[key.slice(0, -1)] !== value
+              return record[key.slice(0, -1) as keyof typeof record] !== value
             }
             if (key.endsWith('>')) {
-              return record[key.slice(0, -1)] > value
+              return record[key.slice(0, -1) as keyof typeof record] > value
             }
             if (key.endsWith('>=')) {
-              return record[key.slice(0, -2)] >= value
+              return record[key.slice(0, -2) as keyof typeof record] >= value
             }
             if (key.endsWith('<')) {
-              return record[key.slice(0, -1)] < value
+              return record[key.slice(0, -1) as keyof typeof record] < value
             }
             if (key.endsWith('<=')) {
-              return record[key.slice(0, -2)] <= value
+              return record[key.slice(0, -2) as keyof typeof record] <= value
             }
-            return record[key] === value
+            return record[key as keyof typeof record] === value
           })
         )
 
@@ -363,9 +363,9 @@ const createQueryBuilder = <T extends keyof Database['public']['Tables']>(table:
         for (const { column, ascending } of queryState.order.reverse()) {
           results.sort((a, b) => {
             if (ascending) {
-              return a[column] > b[column] ? 1 : -1
+              return a[column as keyof typeof a] > b[column as keyof typeof b] ? 1 : -1
             }
-            return a[column] < b[column] ? 1 : -1
+            return a[column as keyof typeof a] < b[column as keyof typeof b] ? 1 : -1
           })
         }
 
@@ -383,16 +383,16 @@ const createQueryBuilder = <T extends keyof Database['public']['Tables']>(table:
 
         // Apply filters
         results = results.filter(record => 
-          Object.entries(queryState.filters).every(([key, value]) => record[key] === value)
+          Object.entries(queryState.filters).every(([key, value]: [string, unknown]) => record[key as keyof typeof record] === value)
         )
 
         // Apply ordering
         for (const { column, ascending } of queryState.order.reverse()) {
           results.sort((a, b) => {
             if (ascending) {
-              return a[column] > b[column] ? 1 : -1
+              return a[column as keyof typeof a] > b[column as keyof typeof b] ? 1 : -1
             }
-            return a[column] < b[column] ? 1 : -1
+            return a[column as keyof typeof a] < b[column as keyof typeof b] ? 1 : -1
           })
         }
 
